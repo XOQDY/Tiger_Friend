@@ -36,3 +36,5 @@ class TigerCase(BaseModel):
     status: int
     vibrate: int
     hungry: int
+
+x = 0
