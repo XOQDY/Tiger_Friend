@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from datetime import datetime
 
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.encoders import jsonable_encoder
 
 app = FastAPI()
 
@@ -29,6 +30,8 @@ class LightSensor(BaseModel):
     case: int
     time: float
 
+class Light_Input(BaseModel):
+    case: int
 
 class TigerCase(BaseModel):
     room: int
@@ -36,3 +39,13 @@ class TigerCase(BaseModel):
     status: int
     vibrate: int
     hungry: int
+
+@app.post("/light")
+def get_light(light: Light_Input):
+    lightsensor = {
+        "case": light.case,
+        "time": datetime.now()
+    }
+    m = jsonable_encoder(lightsensor)
+    Light_collection.insert_one(m)
+    return "DONE."
