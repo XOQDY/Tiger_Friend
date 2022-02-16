@@ -42,7 +42,7 @@ class TigerCase(BaseModel):
     hungry: int
 
 @app.post("/temp")
-def get_temp(tempinput: Temp_Input):
+def post_temp(tempinput: Temp_Input):
     new_temp = tempinput.temp
     Temp_collection.update_one({},{"$set": {"temperature": new_temp}})
     return "DONE."
