@@ -41,7 +41,7 @@ class TigerCase(BaseModel):
     vibrate: int
     hungry: int
 
-@app.post("/vibrate")
+@app.post("/Danger_Distance")
 def case_vibration(status: DangerDistance):
     room = status.room
     query = Case_collection.find_one({"room": room}, {"_id": 0})
