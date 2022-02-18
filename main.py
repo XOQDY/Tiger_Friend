@@ -81,10 +81,18 @@ def authenticate_user(collection_users, username: str, password: str):
     return user
 
 
-@app.post("/request-permission", response_model=Permission)
+@app.put("/request-permission", response_model=Permission)
 async def login_for_open_door(form_data: OAuth2PasswordRequestForm = Depends()):
     user = authenticate_user(users_collection, form_data.username, form_data.password)
     if not user:
         return {"access:": 0}
-    cage_collection.update_one({"cage": form_data.scopes}, {"$set": {"status": 1}})
+    cage_collection.update_one({"room": form_data.scopes}, {"$set": {"status": 1}})
     return {"access": 1}
+
+
+@app.put("/close-door/{room}")
+async def close_door(room: int):
+    cage_collection.update_one({"room": room}, {"$set": {"status": 0}})
+    return {
+        "message": f"Door in cage {room} are closing."
+    }
