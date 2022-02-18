@@ -23,13 +23,16 @@ client = MongoClient('mongodb://localhost', 27017)
 
 db = client["Tiger_Friend"]
 Light_collection = db["Light_Sensor"]
-Case_collection = db["Case"]
+Case_collection = db["Cage"]
 
 
 class LightSensor(BaseModel):
     case: int
     time: float
 
+class Vibration(BaseModel):
+    room: int
+    vibrate: int
 
 class TigerCase(BaseModel):
     room: int
@@ -39,13 +42,13 @@ class TigerCase(BaseModel):
     hungry: int
 
 @app.post("/vibrate")
-def case_vibration(status: TigerCase):
+def case_vibration(status: Vibration):
     room = status.room
     query = Case_collection.find_one({"room": room}, {"_id": 0})
     if query is None:
         raise HTTPException(404, f"Couldn't find cage: {room}")
-    if status.status:
-        Case_collection.update_one({"room": room}, {"$set": {"status": 1}})
+    if status.vibrate:
+        Case_collection.update_one({"room": room}, {"$set": {"vibrate": 1}})
         return{
             "message": f"Cage {room} is getting vibrated."
         }
