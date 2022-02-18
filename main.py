@@ -48,7 +48,9 @@ class UserInDB(User):
 
 
 class Permission(BaseModel):
-    access: int
+    username: str
+    password: str
+    room: int
 
 
 class LightSensor(BaseModel):
@@ -81,12 +83,12 @@ def authenticate_user(collection_users, username: str, password: str):
     return user
 
 
-@app.put("/request-permission", response_model=Permission)
-async def login_for_open_door(form_data: OAuth2PasswordRequestForm = Depends()):
+@app.put("/request-permission")
+async def login_for_open_door(form_data: Permission):
     user = authenticate_user(users_collection, form_data.username, form_data.password)
     if not user:
         return {"access:": 0}
-    cage_collection.update_one({"room": form_data.scopes}, {"$set": {"status": 1}})
+    cage_collection.update_one({"room": form_data.room}, {"$set": {"status": 1}})
     return {"access": 1}
 
 
