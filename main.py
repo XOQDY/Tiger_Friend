@@ -44,6 +44,10 @@ class TigerCase(BaseModel):
 
 @app.post("/temp")
 def post_temp(tempinput: Temp_Input):
+    query_cage = Case_collection.find({"cage": Temp_Input.cage})
+    list_query = list(query_cage)
+    if len(list_query) == 0:
+        raise HTTPException(404, f"Couldn't find cage: {Temp_Input.cage}")
     new_temp = tempinput.temp
     Temp_collection.update_one({},{"$set": {"temperature": new_temp}})
     return "DONE."
