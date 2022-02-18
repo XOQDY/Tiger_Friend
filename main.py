@@ -28,10 +28,11 @@ Temp_collection = db["Temperature_Sensor"]
 
 
 class LightSensor(BaseModel):
-    case: int
+    cage: int
     time: float
 
 class Temp_Input(BaseModel):
+    cage: int
     temp: float
 
 class TigerCase(BaseModel):
