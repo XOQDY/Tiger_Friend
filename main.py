@@ -1,3 +1,4 @@
+from tkinter.messagebox import NO
 from fastapi import FastAPI, HTTPException
 from pymongo import MongoClient
 from pydantic import BaseModel
@@ -29,6 +30,9 @@ class LightSensor(BaseModel):
     case: int
     time: float
 
+class DangerDistance(BaseModel):
+    room: int
+    danger: int
 
 class TigerCase(BaseModel):
     room: int
@@ -36,3 +40,20 @@ class TigerCase(BaseModel):
     status: int
     vibrate: int
     hungry: int
+
+@app.post("/Danger_Distance")
+def case_vibration(status: DangerDistance):
+    room = status.room
+    query = Case_collection.find_one({"room": room}, {"_id": 0})
+    if query is None:
+        raise HTTPException(404, f"Couldn't find cage: {room}")
+    if status.danger:
+        Case_collection.update_one({"room": room}, {"$set": {"danger": 1}})
+        return{
+            "message": f"There is a people in danger distance at cage {room}."
+        }
+    else:
+        Case_collection.update_one({"room": room}, {"$set": {"danger": 0}})
+        return{
+            "message": f"There is no people in danger distance at cage {room}."
+        }
