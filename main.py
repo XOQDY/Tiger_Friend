@@ -42,7 +42,7 @@ class TigerCase(BaseModel):
 
 @app.post("/light")
 def get_light(light: Light_Input):
-    query = Case_collection.find({"cage": light.cage},{"_id": 0})
+    query = Case_collection.find({"room": light.cage},{"_id": 0})
     list_query = list(query)
     if len(list_query) == 0:
         raise HTTPException(404, f"Couldn't find cage: {light.cage}")
@@ -55,7 +55,7 @@ def get_light(light: Light_Input):
     list_light = list(query_light)
     list_light.reverse()
     for r in list_light:
-        print(r["time"])
+        #print(count)
         if count >= 10:
             Light_collection.delete_one(r)
             continue
@@ -63,6 +63,10 @@ def get_light(light: Light_Input):
             Light_collection.delete_one(r)
             continue
         count = count + 1
+    if count >= 10:
+        Case_collection.update_one({"room": light.cage},{"$set": {"hungry": 1}})
+    else:
+        Case_collection.update_one({"room": light.cage},{"$set": {"hungry": 0}})
     m = jsonable_encoder(lightsensor)
     Light_collection.insert_one(m)
     return "DONE."
