@@ -35,8 +35,8 @@ client = MongoClient('mongodb://localhost', 27017)
 
 db = client["Tiger_Friend"]
 users_collection = db["Users"]
-Light_collection = db["Light_Sensor"]
-Case_collection = db["Case"]
+light_collection = db["Light_Sensor"]
+cage_collection = db["Cage"]
 
 
 class User(BaseModel):
@@ -86,4 +86,5 @@ async def login_for_open_door(form_data: OAuth2PasswordRequestForm = Depends()):
     user = authenticate_user(users_collection, form_data.username, form_data.password)
     if not user:
         return {"access:": 0}
+    cage_collection.update_one({"cage": form_data.scopes}, {"$set": {"status": 1}})
     return {"access": 1}
