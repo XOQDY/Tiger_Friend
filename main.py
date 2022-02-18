@@ -30,6 +30,9 @@ class LightSensor(BaseModel):
     case: int
     time: float
 
+class DangerDistance(BaseModel):
+    room: int
+    danger: int
 
 class TigerCase(BaseModel):
     room: int
@@ -38,20 +41,19 @@ class TigerCase(BaseModel):
     vibrate: int
     hungry: int
 
-@app.post("/vibrate")
-def case_vibration(status: TigerCase):
+@app.post("/DangerDistance")
+def case_vibration(status: DangerDistance):
     room = status.room
     query = Case_collection.find_one({"room": room}, {"_id": 0})
     if query is None:
         raise HTTPException(404, f"Couldn't find cage: {room}")
-    if status.status:
-        Case_collection.update_one({"room": room}, {"$set": {"status": 1}})
+    if status.danger:
+        Case_collection.update_one({"room": room}, {"$set": {"danger": 1}})
         return{
-            "message": f"Cage {room} is getting vibrated."
+            "message": f"There is a people in danger distance at cage {room}."
         }
     else:
-        Case_collection.update_one({"room": room}, {"$set": {"vibrate": 0}})
+        Case_collection.update_one({"room": room}, {"$set": {"danger": 0}})
         return{
-            "message": f"There is no vibration in cage {room}."
+            "message": f"There is no people in danger distance at cage {room}."
         }
-        
