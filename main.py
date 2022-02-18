@@ -23,12 +23,11 @@ client = MongoClient('mongodb://localhost', 27017)
 db = client["Tiger_Friend"]
 Light_collection = db["Light_Sensor"]
 Case_collection = db["Cage"]
-
+Door_collection = db["Door"]
 
 class LightSensor(BaseModel):
     case: int
     time: float
-
 
 class TigerCase(BaseModel):
     room: int
@@ -37,4 +36,13 @@ class TigerCase(BaseModel):
     vibrate: int
     hungry: int
 
-
+@app.get("/door/{number}")
+def get_door(number: int):
+    query = Case_collection.find_one({"room": number},{"_id": 0})
+    list_query = list(query)
+    if len(list_query) == 0:
+        raise HTTPException(404, f"Couldn't find cage: {number}")
+    if query["status"] == 1:
+        return 1
+    else:
+        return 0
