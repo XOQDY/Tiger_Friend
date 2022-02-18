@@ -22,7 +22,7 @@ client = MongoClient('mongodb://localhost', 27017)
 
 db = client["Tiger_Friend"]
 Light_collection = db["Light_Sensor"]
-Case_collection = db["Case"]
+Case_collection = db["Cage"]
 
 
 class LightSensor(BaseModel):
@@ -36,3 +36,5 @@ class TigerCase(BaseModel):
     status: int
     vibrate: int
     hungry: int
+
+
