@@ -36,3 +36,9 @@ class TigerCase(BaseModel):
     status: int
     vibrate: int
     hungry: int
+
+@app.get("/status/light/{case}")
+def get_status_hungry():
+    case: int
+    query = Light_collection.find({"case": case})
+    pass
