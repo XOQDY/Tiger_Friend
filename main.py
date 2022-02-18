@@ -23,15 +23,15 @@ client = MongoClient('mongodb://localhost', 27017)
 
 db = client["Tiger_Friend"]
 Light_collection = db["Light_Sensor"]
-Case_collection = db["Case"]
+Case_collection = db["Cage"]
 
 
 class LightSensor(BaseModel):
-    case: int
+    cage: int
     time: float
 
 class Light_Input(BaseModel):
-    case: int
+    cage: int
 
 class TigerCase(BaseModel):
     room: int
@@ -42,10 +42,27 @@ class TigerCase(BaseModel):
 
 @app.post("/light")
 def get_light(light: Light_Input):
+    query = Case_collection.find({"cage": light.cage},{"_id": 0})
+    list_query = list(query)
+    if len(list_query) == 0:
+        raise HTTPException(404, f"Couldn't find cage: {light.cage}")
     lightsensor = {
-        "case": light.case,
-        "time": datetime.now()
+        "cage": light.cage,
+        "time": datetime.now().timestamp()
     }
+    query_light = Light_collection.find({"cage": light.cage})
+    count = 1
+    list_light = list(query_light)
+    list_light.reverse()
+    for r in list_light:
+        print(r["time"])
+        if count >= 10:
+            Light_collection.delete_one(r)
+            continue
+        if (datetime.now().timestamp() - r["time"]) > 3600:
+            Light_collection.delete_one(r)
+            continue
+        count = count + 1
     m = jsonable_encoder(lightsensor)
     Light_collection.insert_one(m)
     return "DONE."
