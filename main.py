@@ -43,6 +43,14 @@ def get_door(number: int):
     if len(list_query) == 0:
         raise HTTPException(404, f"Couldn't find cage: {number}")
     if query["status"] == 1:
-        return 1
+        door = 1
     else:
-        return 0
+        door = 0
+    if query["hungry"] == 1:
+        food = 1
+    else:
+        food = 0
+    return {
+        "door": door,
+        "food": food
+    }
