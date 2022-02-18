@@ -54,4 +54,3 @@ def case_vibration(status: TigerCase):
         return{
             "message": f"There is no vibration in cage {room}."
         }
-        
