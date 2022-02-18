@@ -23,7 +23,7 @@ client = MongoClient('mongodb://localhost', 27017)
 
 db = client["Tiger_Friend"]
 Light_collection = db["Light_Sensor"]
-Case_collection = db["Case"]
+Case_collection = db["Cage"]
 Temp_collection = db["Temperature_Sensor"]
 
 
@@ -44,10 +44,11 @@ class TigerCase(BaseModel):
 
 @app.post("/temp")
 def post_temp(tempinput: Temp_Input):
-    query_cage = Case_collection.find({"cage": Temp_Input.cage})
+    query_cage = Case_collection.find({"room": tempinput.cage})
     list_query = list(query_cage)
     if len(list_query) == 0:
-        raise HTTPException(404, f"Couldn't find cage: {Temp_Input.cage}")
+        raise HTTPException(404, f"Couldn't find cage: {tempinput.cage}")
     new_temp = tempinput.temp
     Temp_collection.update_one({},{"$set": {"temperature": new_temp}})
+    Case_collection.update_one({"room": tempinput.cage},{"$set": {"temperature": new_temp}})
     return "DONE."
