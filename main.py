@@ -1,16 +1,11 @@
-from typing import Optional
-from datetime import datetime, timedelta
-
-from fastapi import FastAPI, HTTPException, Depends, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi import FastAPI
+from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from pymongo import MongoClient
 from pydantic import BaseModel
 
 from fastapi.middleware.cors import CORSMiddleware
 
-# to get a string like this run:
-# openssl rand -hex 32
 SECRET_KEY = "1bffc32856a4e21531c5bdd310fefe8a5313343150d3aa71e7b2d8ce58b6c6897"
 ALGORITHM = "HS256"
 
@@ -37,14 +32,6 @@ db = client["Tiger_Friend"]
 users_collection = db["Users"]
 light_collection = db["Light_Sensor"]
 cage_collection = db["Cage"]
-
-
-class User(BaseModel):
-    username: str
-
-
-class UserInDB(User):
-    hashed_password: str
 
 
 class Permission(BaseModel):
