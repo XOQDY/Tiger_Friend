@@ -39,6 +39,4 @@ class TigerCase(BaseModel):
 
 @app.get("/status/light/{case}")
 def get_status_hungry():
-    case: int
-    query = Light_collection.find({"case": case})
     pass
