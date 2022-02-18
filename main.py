@@ -1,9 +1,17 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
+from fastapi.security import OAuth2PasswordBearer
+from passlib.context import CryptContext
 from pymongo import MongoClient
 from pydantic import BaseModel
-from datetime import datetime
 
 from fastapi.middleware.cors import CORSMiddleware
+
+SECRET_KEY = "1bffc32856a4e21531c5bdd310fefe8a5313343150d3aa71e7b2d8ce58b6c6897"
+ALGORITHM = "HS256"
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 app = FastAPI()
 
@@ -21,8 +29,15 @@ app.add_middleware(
 client = MongoClient('mongodb://localhost', 27017)
 
 db = client["Tiger_Friend"]
-Light_collection = db["Light_Sensor"]
-Case_collection = db["Case"]
+users_collection = db["Users"]
+light_collection = db["Light_Sensor"]
+cage_collection = db["Cage"]
+
+
+class Permission(BaseModel):
+    username: str
+    password: str
+    room: int
 
 
 class LightSensor(BaseModel):
@@ -36,3 +51,37 @@ class TigerCase(BaseModel):
     status: int
     vibrate: int
     hungry: int
+
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+
+def authenticate_user(collection_users, username: str, password: str):
+    user = collection_users.find_one({"username": username}, {"_id": 0})
+    if not user:
+        return False
+    if not verify_password(password, user["hashed_password"]):
+        return False
+    return user
+
+
+@app.put("/request-permission")
+async def login_for_open_door(form_data: Permission):
+    user = authenticate_user(users_collection, form_data.username, form_data.password)
+    if not user:
+        return {"access:": 0}
+    cage_collection.update_one({"room": form_data.room}, {"$set": {"status": 1}})
+    return {"access": 1}
+
+
+@app.put("/close-door/{room}")
+async def close_door(room: int):
+    cage_collection.update_one({"room": room}, {"$set": {"status": 0}})
+    return {
+        "message": f"Door in cage {room} are closing."
+    }
