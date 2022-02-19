@@ -29,6 +29,9 @@ app.add_middleware(
 client = MongoClient('mongodb://localhost', 27017)
 
 db = client["Tiger_Friend"]
+
+
+Door_collection = db["Door"]
 users_collection = db["Users"]
 light_collection = db["Light_Sensor"]
 cage_collection = db["Cage"]
@@ -39,19 +42,31 @@ class Permission(BaseModel):
     password: str
     room: int
 
-
 class LightSensor(BaseModel):
     case: int
     time: float
-
 
 class TigerCase(BaseModel):
     room: int
     temperature: float
     status: int
+    food_door: int
     vibrate: int
     hungry: int
 
+class Food_door(BaseModel):
+    cage: int
+    status: int
+
+@app.post("/fdoor")
+def post_fdoor(fdoor: Food_door):
+    room = fdoor.cage
+    query_cage = cage_collection.find({"room": room})
+    list_cage = list(query_cage)
+    if len(list_cage) == 0:
+        raise HTTPException(404, f"Couldn't found cage: {room}")
+    cage_collection.update_one({"room": room}, {"$set": {"food_door": fdoor.status}})
+    return "DONE."
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
