@@ -86,12 +86,12 @@ class LightInput(BaseModel):
 class FoodDoor(BaseModel):
     room: int
     status: int
-
-
+      
+      
 class FoodDrop(BaseModel):
     room: int
 
-
+      
 class TigerCase(BaseModel):
     room: int
     temperature: float
@@ -144,7 +144,7 @@ async def check_token(token: str = Depends(oauth2_scheme)):
         raise credentials_exception
     return True
 
-
+  
 @app.post("/vibrate")
 def cage_vibration(status: Vibration):
     room = status.room
