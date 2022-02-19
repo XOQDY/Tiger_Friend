@@ -50,16 +50,16 @@ class LightSensor(BaseModel):
     time: float
 
 
-class Temp_Input(BaseModel):
+class TempInput(BaseModel):
     cage: int
     temp: float
 
 
-class Light_Input(BaseModel):
+class LightInput(BaseModel):
     cage: int
 
 
-class Food_door(BaseModel):
+class FoodDoor(BaseModel):
     cage: int
     status: int
 
@@ -74,7 +74,7 @@ class TigerCase(BaseModel):
 
 
 @app.post("/temp")
-def post_temp(tempinput: Temp_Input):
+def post_temp(tempinput: TempInput):
     query_cage = cage_collection.find({"room": tempinput.cage})
     list_query = list(query_cage)
     if len(list_query) == 0:
@@ -86,7 +86,7 @@ def post_temp(tempinput: Temp_Input):
 
 
 @app.post("/light")
-def get_light(light: Light_Input):
+def get_light(light: LightInput):
     query = cage_collection.find({"room": light.cage}, {"_id": 0})
     list_query = list(query)
     if len(list_query) == 0:
@@ -129,7 +129,7 @@ def get_door(number: int):
 
 
 @app.post("/fdoor")
-def post_fdoor(fdoor: Food_door):
+def post_fdoor(fdoor: FoodDoor):
     room = fdoor.cage
     query_cage = cage_collection.find({"room": room})
     list_cage = list(query_cage)
