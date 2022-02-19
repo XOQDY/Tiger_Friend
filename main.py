@@ -53,6 +53,17 @@ class TigerCase(BaseModel):
     vibrate: int
     hungry: int
 
+@app.get("/door/{number}")
+def get_door(number: int):
+    query = cage_collection.find_one({"room": number},{"_id": 0})
+    list_query = list(query)
+    if len(list_query) == 0:
+        raise HTTPException(404, f"Couldn't find cage: {number}")
+    return{
+      "door": query["status"],
+      "food": query["food_door"]
+    }
+
 class Food_door(BaseModel):
     cage: int
     status: int
