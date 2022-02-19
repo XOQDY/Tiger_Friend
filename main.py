@@ -30,7 +30,6 @@ client = MongoClient('mongodb://localhost', 27017)
 
 db = client["Tiger_Friend"]
 
-
 Door_collection = db["Door"]
 users_collection = db["Users"]
 light_collection = db["Light_Sensor"]
@@ -100,3 +99,4 @@ async def close_door(room: int):
     return {
         "message": f"Door in cage {room} are closing."
     }
+
