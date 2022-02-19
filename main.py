@@ -81,7 +81,7 @@ class TigerCase(BaseModel):
     hungry: int
 
 @app.post("/vibrate")
-def case_vibration(status: Vibration):
+def cage_vibration(status: Vibration):
     room = status.room
     query = cage_collection.find_one({"room": room}, {"_id": 0})
     if query is None:
@@ -98,7 +98,7 @@ def case_vibration(status: Vibration):
         }
 
 @app.post("/Danger_Distance")
-def case_vibration(status: DangerDistance):
+def cage_danger(status: DangerDistance):
     room = status.room
     query = cage_collection.find_one({"room": room}, {"_id": 0})
     if query is None:
