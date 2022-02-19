@@ -72,6 +72,7 @@ class LightInput(BaseModel):
 
 class FoodDoor(BaseModel):
     room: int
+    status: int
 
 class FoodDrop(BaseModel):
     room: int
