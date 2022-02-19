@@ -217,3 +217,9 @@ async def close_door(room: int):
     return {
         "message": f"Door in cage {room} are closing."
     }
+
+
+@app.get("/tiger/{room}", response_model=TigerCase)
+async def information(room: int):
+    tiger = cage_collection.find_one({"room": room}, {"_id": 0, "food_door": 0})
+    return tiger
