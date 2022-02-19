@@ -4,6 +4,8 @@ from passlib.context import CryptContext
 from pymongo import MongoClient
 from pydantic import BaseModel
 
+from datetime import datetime
+
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.encoders import jsonable_encoder
 
@@ -30,7 +32,7 @@ app.add_middleware(
 client = MongoClient('mongodb://localhost', 27017)
 
 db = client["Tiger_Friend"]
-
+Temp_collection = db["Temperature_Sensor"]
 Door_collection = db["Door"]
 users_collection = db["Users"]
 light_collection = db["Light_Sensor"]
@@ -46,6 +48,10 @@ class LightSensor(BaseModel):
     cage: int
     time: float
 
+class Temp_Input(BaseModel):
+    cage: int
+    temp: float
+      
 class Light_Input(BaseModel):
     cage: int
 
@@ -57,6 +63,17 @@ class TigerCase(BaseModel):
     vibrate: int
     hungry: int
 
+@app.post("/temp")
+def post_temp(tempinput: Temp_Input):
+    query_cage = cage_collection.find({"room": tempinput.cage})
+    list_query = list(query_cage)
+    if len(list_query) == 0:
+        raise HTTPException(404, f"Couldn't find cage: {tempinput.cage}")
+    new_temp = tempinput.temp
+    Temp_collection.update_one({},{"$set": {"temperature": new_temp}})
+    cage_collection.update_one({"room": tempinput.cage},{"$set": {"temperature": new_temp}})
+    return "DONE."
+  
 @app.post("/light")
 def get_light(light: Light_Input):
     query = cage_collection.find({"room": light.cage},{"_id": 0})
