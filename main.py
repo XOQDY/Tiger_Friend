@@ -33,25 +33,22 @@ class TigerCase(BaseModel):
     room: int
     temperature: float
     status: int
+    food_door: int
     vibrate: int
     hungry: int
 
-@app.get("/door/{number}")
-def get_door(number: int):
-    query = Case_collection.find_one({"room": number},{"_id": 0})
-    list_query = list(query)
-    if len(list_query) == 0:
-        raise HTTPException(404, f"Couldn't find cage: {number}")
-    if query["status"] == 1:
-        door = 1
-    else:
-        door = 0
-    if query["hungry"] == 1:
-        food = 1
-    else:
-        food = 0
-    return {
-        "door": door,
-        "food": food
-    }
+class Food_door(BaseModel):
+    cage: int
+    status: int
+
+@app.post("/fdoor")
+def post_fdoor(fdoor: Food_door):
+    room = fdoor.cage
+    query_cage = Case_collection.find({"room": room})
+    list_cage = list(query_cage)
+    if len(list_cage) == 0:
+        raise HTTPException(404, f"Couldn't found cage: {room}")
+    Case_collection.update_one({"room": room}, {"$set": {"food_door": fdoor.status}})
+    return "DONE."
+    
 
