@@ -1,14 +1,12 @@
-from tkinter.messagebox import NO
 from fastapi import FastAPI, HTTPException
 from fastapi.security import OAuth2PasswordBearer
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.encoders import jsonable_encoder
 from passlib.context import CryptContext
 from pymongo import MongoClient
 from pydantic import BaseModel
 
 from datetime import datetime
-
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.encoders import jsonable_encoder
 
 SECRET_KEY = "1bffc32856a4e21531c5bdd310fefe8a5313343150d3aa71e7b2d8ce58b6c6897"
 ALGORITHM = "HS256"
@@ -34,8 +32,8 @@ client = MongoClient('mongodb://localhost', 27017)
 
 db = client["Tiger_Friend"]
 
-Temp_collection = db["Temperature_Sensor"]
-Door_collection = db["Door"]
+temp_collection = db["Temperature_Sensor"]
+door_collection = db["Door"]
 users_collection = db["Users"]
 light_collection = db["Light_Sensor"]
 cage_collection = db["Cage"]
@@ -46,17 +44,21 @@ class Permission(BaseModel):
     password: str
     room: int
 
+
 class LightSensor(BaseModel):
     cage: int
     time: float
+
 
 class Vibration(BaseModel):
     room: int
     vibrate: int
 
+
 class DangerDistance(BaseModel):
     room: int
     danger: int
+
 
 class TempInput(BaseModel):
     cage: int
@@ -80,6 +82,24 @@ class TigerCase(BaseModel):
     vibrate: int
     hungry: int
 
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+
+def authenticate_user(collection_users, username: str, password: str):
+    user = collection_users.find_one({"username": username}, {"_id": 0})
+    if not user:
+        return False
+    if not verify_password(password, user["hashed_password"]):
+        return False
+    return user
+
+
 @app.post("/vibrate")
 def cage_vibration(status: Vibration):
     room = status.room
@@ -88,14 +108,15 @@ def cage_vibration(status: Vibration):
         raise HTTPException(404, f"Couldn't find cage: {room}")
     if status.vibrate:
         cage_collection.update_one({"room": room}, {"$set": {"vibrate": 1}})
-        return{
+        return {
             "message": f"Cage {room} is getting vibrated."
         }
     else:
         cage_collection.update_one({"room": room}, {"$set": {"vibrate": 0}})
-        return{
+        return {
             "message": f"There is no vibration in cage {room}."
         }
+
 
 @app.post("/Danger_Distance")
 def cage_danger(status: DangerDistance):
@@ -105,25 +126,25 @@ def cage_danger(status: DangerDistance):
         raise HTTPException(404, f"Couldn't find cage: {room}")
     if status.danger:
         cage_collection.update_one({"room": room}, {"$set": {"danger": 1}})
-        return{
+        return {
             "message": f"There is a people in danger distance at cage {room}."
         }
     else:
         cage_collection.update_one({"room": room}, {"$set": {"danger": 0}})
-        return{
+        return {
             "message": f"There is no people in danger distance at cage {room}."
         }
 
 
 @app.post("/temp")
-def post_temp(tempinput: TempInput):
-    query_cage = cage_collection.find({"room": tempinput.cage})
+def post_temp(temp_input: TempInput):
+    query_cage = cage_collection.find({"room": temp_input.cage})
     list_query = list(query_cage)
     if len(list_query) == 0:
-        raise HTTPException(404, f"Couldn't find cage: {tempinput.cage}")
-    new_temp = tempinput.temp
-    Temp_collection.update_one({}, {"$set": {"temperature": new_temp}})
-    cage_collection.update_one({"room": tempinput.cage}, {"$set": {"temperature": new_temp}})
+        raise HTTPException(404, f"Couldn't find cage: {temp_input.cage}")
+    new_temp = temp_input.temp
+    temp_collection.update_one({}, {"$set": {"temperature": new_temp}})
+    cage_collection.update_one({"room": temp_input.cage}, {"$set": {"temperature": new_temp}})
     return "DONE."
 
 
@@ -133,7 +154,7 @@ def get_light(light: LightInput):
     list_query = list(query)
     if len(list_query) == 0:
         raise HTTPException(404, f"Couldn't find cage: {light.cage}")
-    lightsensor = {
+    light_sensor = {
         "cage": light.cage,
         "time": datetime.now().timestamp()
     }
@@ -153,7 +174,7 @@ def get_light(light: LightInput):
         cage_collection.update_one({"room": light.cage}, {"$set": {"hungry": 1}})
     else:
         cage_collection.update_one({"room": light.cage}, {"$set": {"hungry": 0}})
-    m = jsonable_encoder(lightsensor)
+    m = jsonable_encoder(light_sensor)
     light_collection.insert_one(m)
     return "DONE."
 
@@ -170,32 +191,15 @@ def get_door(number: int):
     }
 
 
-@app.post("/fdoor")
-def post_fdoor(fdoor: FoodDoor):
-    room = fdoor.cage
+@app.post("/food-door")
+def post_food_door(food_door: FoodDoor):
+    room = food_door.cage
     query_cage = cage_collection.find({"room": room})
     list_cage = list(query_cage)
     if len(list_cage) == 0:
         raise HTTPException(404, f"Couldn't found cage: {room}")
-    cage_collection.update_one({"room": room}, {"$set": {"food_door": fdoor.status}})
+    cage_collection.update_one({"room": room}, {"$set": {"food_door": food_door.status}})
     return "DONE."
-
-
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-def get_password_hash(password):
-    return pwd_context.hash(password)
-
-
-def authenticate_user(collection_users, username: str, password: str):
-    user = collection_users.find_one({"username": username}, {"_id": 0})
-    if not user:
-        return False
-    if not verify_password(password, user["hashed_password"]):
-        return False
-    return user
 
 
 @app.put("/request-permission")
@@ -213,4 +217,3 @@ async def close_door(room: int):
     return {
         "message": f"Door in cage {room} are closing."
     }
-
