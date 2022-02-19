@@ -22,7 +22,7 @@ client = MongoClient('mongodb://localhost', 27017)
 
 db = client["Tiger_Friend"]
 Light_collection = db["Light_Sensor"]
-Case_collection = db["Case"]
+Case_collection = db["Cage"]
 
 
 class LightSensor(BaseModel):
@@ -36,3 +36,17 @@ class TigerCase(BaseModel):
     status: int
     vibrate: int
     hungry: int
+
+class Door(BaseModel):
+    cage: int
+    status: int
+
+@app.post("/door/get")
+def post_door(door: Door):
+    room = door.cage
+    query_cage = Case_collection.find({"room": room})
+    list_cage = list(query_cage)
+    if len(list_cage) == 0:
+        raise HTTPException(404, f"Couldn't found cage: {room}")
+    Case_collection.update_one({"room": room}, {"$set": {"status": door.status}})
+    return "DONE."
