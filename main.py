@@ -73,8 +73,9 @@ class LightInput(BaseModel):
 
 class FoodDoor(BaseModel):
     room: int
-    status: int
 
+class FoodDrop(BaseModel):
+    room: int
 
 class TigerCase(BaseModel):
     room: int
@@ -145,7 +146,6 @@ def post_temp(temp_input: TempInput):
     if len(list_query) == 0:
         raise HTTPException(404, f"Couldn't find cage: {temp_input.room}")
     new_temp = temp_input.temp
-    temp_collection.update_one({}, {"$set": {"temperature": new_temp}})
     cage_collection.update_one({"room": temp_input.room}, {"$set": {"temperature": new_temp}})
     return "DONE."
 
@@ -221,7 +221,17 @@ async def close_door(room: int):
     }
 
 
-@app.get("/tiger/{room}", responsemodel=TigerCase)
+@app.get("/tiger/{room}")
 def information(room: int):
     tiger = cage_collection.find_one({"room": room}, {"_id": 0, "food_door": 0})
     return tiger
+
+@app.post("/food/success")
+def fooddrop(fooddrop: FoodDrop):
+    room = fooddrop.room
+    query_cage = cage_collection.find({"room": room})
+    list_cage = list(query_cage)
+    if len(list_cage) == 0:
+        raise HTTPException(404, f"Couldn't found cage: {room}")
+    cage_collection.update_one({"room": room}, {"$set": {"food_door": 0}})
+    return "DONE."
