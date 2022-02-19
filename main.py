@@ -1,4 +1,3 @@
-from urllib import response
 from fastapi import FastAPI, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
