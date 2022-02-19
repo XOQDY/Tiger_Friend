@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from pymongo import MongoClient
@@ -44,16 +44,25 @@ class Permission(BaseModel):
     password: str
     room: int
 
+
 class LightSensor(BaseModel):
     cage: int
     time: float
 
+
 class Temp_Input(BaseModel):
     cage: int
     temp: float
-      
+
+
 class Light_Input(BaseModel):
     cage: int
+
+
+class Food_door(BaseModel):
+    cage: int
+    status: int
+
 
 class TigerCase(BaseModel):
     room: int
@@ -63,6 +72,7 @@ class TigerCase(BaseModel):
     vibrate: int
     hungry: int
 
+
 @app.post("/temp")
 def post_temp(tempinput: Temp_Input):
     query_cage = cage_collection.find({"room": tempinput.cage})
@@ -70,13 +80,14 @@ def post_temp(tempinput: Temp_Input):
     if len(list_query) == 0:
         raise HTTPException(404, f"Couldn't find cage: {tempinput.cage}")
     new_temp = tempinput.temp
-    Temp_collection.update_one({},{"$set": {"temperature": new_temp}})
-    cage_collection.update_one({"room": tempinput.cage},{"$set": {"temperature": new_temp}})
+    Temp_collection.update_one({}, {"$set": {"temperature": new_temp}})
+    cage_collection.update_one({"room": tempinput.cage}, {"$set": {"temperature": new_temp}})
     return "DONE."
-  
+
+
 @app.post("/light")
 def get_light(light: Light_Input):
-    query = cage_collection.find({"room": light.cage},{"_id": 0})
+    query = cage_collection.find({"room": light.cage}, {"_id": 0})
     list_query = list(query)
     if len(list_query) == 0:
         raise HTTPException(404, f"Couldn't find cage: {light.cage}")
@@ -89,7 +100,6 @@ def get_light(light: Light_Input):
     list_light = list(query_light)
     list_light.reverse()
     for r in list_light:
-        #print(count)
         if count >= 10:
             light_collection.delete_one(r)
             continue
@@ -98,27 +108,25 @@ def get_light(light: Light_Input):
             continue
         count = count + 1
     if count >= 10:
-        cage_collection.update_one({"room": light.cage},{"$set": {"hungry": 1}})
+        cage_collection.update_one({"room": light.cage}, {"$set": {"hungry": 1}})
     else:
-        cage_collection.update_one({"room": light.cage},{"$set": {"hungry": 0}})
+        cage_collection.update_one({"room": light.cage}, {"$set": {"hungry": 0}})
     m = jsonable_encoder(lightsensor)
     light_collection.insert_one(m)
     return "DONE."
 
+
 @app.get("/door/{number}")
 def get_door(number: int):
-    query = cage_collection.find_one({"room": number},{"_id": 0})
+    query = cage_collection.find_one({"room": number}, {"_id": 0})
     list_query = list(query)
     if len(list_query) == 0:
         raise HTTPException(404, f"Couldn't find cage: {number}")
-    return{
-      "door": query["status"],
-      "food": query["food_door"]
+    return {
+        "door": query["status"],
+        "food": query["food_door"]
     }
 
-class Food_door(BaseModel):
-    cage: int
-    status: int
 
 @app.post("/fdoor")
 def post_fdoor(fdoor: Food_door):
@@ -129,6 +137,7 @@ def post_fdoor(fdoor: Food_door):
         raise HTTPException(404, f"Couldn't found cage: {room}")
     cage_collection.update_one({"room": room}, {"$set": {"food_door": fdoor.status}})
     return "DONE."
+
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
