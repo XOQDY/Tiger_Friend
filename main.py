@@ -5,6 +5,7 @@ from pymongo import MongoClient
 from pydantic import BaseModel
 
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.encoders import jsonable_encoder
 
 SECRET_KEY = "1bffc32856a4e21531c5bdd310fefe8a5313343150d3aa71e7b2d8ce58b6c6897"
 ALGORITHM = "HS256"
@@ -42,8 +43,11 @@ class Permission(BaseModel):
     room: int
 
 class LightSensor(BaseModel):
-    case: int
+    cage: int
     time: float
+
+class Light_Input(BaseModel):
+    cage: int
 
 class TigerCase(BaseModel):
     room: int
@@ -52,6 +56,37 @@ class TigerCase(BaseModel):
     food_door: int
     vibrate: int
     hungry: int
+
+@app.post("/light")
+def get_light(light: Light_Input):
+    query = cage_collection.find({"room": light.cage},{"_id": 0})
+    list_query = list(query)
+    if len(list_query) == 0:
+        raise HTTPException(404, f"Couldn't find cage: {light.cage}")
+    lightsensor = {
+        "cage": light.cage,
+        "time": datetime.now().timestamp()
+    }
+    query_light = light_collection.find({"cage": light.cage})
+    count = 1
+    list_light = list(query_light)
+    list_light.reverse()
+    for r in list_light:
+        #print(count)
+        if count >= 10:
+            light_collection.delete_one(r)
+            continue
+        if (datetime.now().timestamp() - r["time"]) > 3600:
+            light_collection.delete_one(r)
+            continue
+        count = count + 1
+    if count >= 10:
+        cage_collection.update_one({"room": light.cage},{"$set": {"hungry": 1}})
+    else:
+        cage_collection.update_one({"room": light.cage},{"$set": {"hungry": 0}})
+    m = jsonable_encoder(lightsensor)
+    light_collection.insert_one(m)
+    return "DONE."
 
 @app.get("/door/{number}")
 def get_door(number: int):
@@ -110,4 +145,3 @@ async def close_door(room: int):
     return {
         "message": f"Door in cage {room} are closing."
     }
-
