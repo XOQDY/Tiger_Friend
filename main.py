@@ -1,3 +1,4 @@
+from tkinter.messagebox import NO
 from fastapi import FastAPI, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
@@ -32,6 +33,7 @@ app.add_middleware(
 client = MongoClient('mongodb://localhost', 27017)
 
 db = client["Tiger_Friend"]
+
 Temp_collection = db["Temperature_Sensor"]
 Door_collection = db["Door"]
 users_collection = db["Users"]
@@ -49,6 +51,9 @@ class LightSensor(BaseModel):
     cage: int
     time: float
 
+class DangerDistance(BaseModel):
+    room: int
+    danger: int
 
 class TempInput(BaseModel):
     cage: int
@@ -71,6 +76,24 @@ class TigerCase(BaseModel):
     food_door: int
     vibrate: int
     hungry: int
+
+
+@app.post("/Danger_Distance")
+def case_vibration(status: DangerDistance):
+    room = status.room
+    query = cage_collection.find_one({"room": room}, {"_id": 0})
+    if query is None:
+        raise HTTPException(404, f"Couldn't find cage: {room}")
+    if status.danger:
+        cage_collection.update_one({"room": room}, {"$set": {"danger": 1}})
+        return{
+            "message": f"There is a people in danger distance at cage {room}."
+        }
+    else:
+        cage_collection.update_one({"room": room}, {"$set": {"danger": 0}})
+        return{
+            "message": f"There is no people in danger distance at cage {room}."
+        }
 
 
 @app.post("/temp")
@@ -171,3 +194,4 @@ async def close_door(room: int):
     return {
         "message": f"Door in cage {room} are closing."
     }
+
