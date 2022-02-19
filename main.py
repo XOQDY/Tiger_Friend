@@ -1,4 +1,3 @@
-from urllib import response
 from fastapi import FastAPI, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
@@ -221,7 +220,7 @@ async def close_door(room: int):
     }
 
 
-@app.get("/tiger/{room}", responsemodel=TigerCase)
+@app.get("/tiger/{room}")
 def information(room: int):
     tiger = cage_collection.find_one({"room": room}, {"_id": 0, "food_door": 0})
     return tiger
