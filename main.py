@@ -46,10 +46,13 @@ class Permission(BaseModel):
     password: str
     room: int
 
-
 class LightSensor(BaseModel):
     cage: int
     time: float
+
+class Vibration(BaseModel):
+    room: int
+    vibrate: int
 
 class DangerDistance(BaseModel):
     room: int
@@ -77,6 +80,22 @@ class TigerCase(BaseModel):
     vibrate: int
     hungry: int
 
+@app.post("/vibrate")
+def case_vibration(status: Vibration):
+    room = status.room
+    query = cage_collection.find_one({"room": room}, {"_id": 0})
+    if query is None:
+        raise HTTPException(404, f"Couldn't find cage: {room}")
+    if status.vibrate:
+        cage_collection.update_one({"room": room}, {"$set": {"vibrate": 1}})
+        return{
+            "message": f"Cage {room} is getting vibrated."
+        }
+    else:
+        cage_collection.update_one({"room": room}, {"$set": {"vibrate": 0}})
+        return{
+            "message": f"There is no vibration in cage {room}."
+        }
 
 @app.post("/Danger_Distance")
 def case_vibration(status: DangerDistance):
