@@ -74,8 +74,10 @@ class FoodDoor(BaseModel):
     room: int
     status: int
 
+
 class FoodDrop(BaseModel):
     room: int
+
 
 class TigerCase(BaseModel):
     room: int
@@ -225,6 +227,7 @@ async def close_door(room: int):
 def information(room: int):
     tiger = cage_collection.find_one({"room": room}, {"_id": 0, "food_door": 0})
     return tiger
+
 
 @app.post("/food/success")
 def fooddrop(fooddrop: FoodDrop):
