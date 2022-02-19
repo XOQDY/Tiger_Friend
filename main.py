@@ -46,7 +46,7 @@ def get_door(number: int):
         door = 1
     else:
         door = 0
-    if query["hungry"] == 1:
+    if query["food_door"] == 1:
         food = 1
     else:
         food = 0
