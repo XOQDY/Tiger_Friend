@@ -263,13 +263,20 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@app.put("/close-door/{room}")
-async def close_door(room: int, permission: bool = Depends(check_token)):
+@app.put("/open-close-door/{room}/{status}")
+async def close_door(room: int, status: int, permission: bool = Depends(check_token)):
     if permission:
-        cage_collection.update_one({"room": room}, {"$set": {"status": 0}})
-        return {
-            "message": f"Door in cage {room} are closing."
-        }
+        if status != 1 and status != 0:
+            raise HTTPException(400, f"Status: {status} not found.")
+        cage_collection.update_one({"room": room}, {"$set": {"status": status}})
+        if status == 1:
+            return {
+                "message": f"Door in cage {room} are opening."
+            }
+        else:
+            return {
+                "message": f"Door in cage {room} are closing."
+            }
 
 
 @app.get("/tiger/{room}")
